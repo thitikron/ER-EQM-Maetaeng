@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ตรวจเช็คเครื่องมือแพทย์ ห้องฉุกเฉิน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #0D47A1;
+  --primary-mid: #1565C0;
+  --primary-light: #E3F2FD;
+  --primary-border: #90CAF9;
+  --high: #B71C1C;
+  --high-mid: #C62828;
+  --high-bg: #FFEBEE;
+  --medium: #E65100;
+  --medium-bg: #FFF3E0;
+  --low: #1B5E20;
+  --low-mid: #2E7D32;
+  --low-bg: #E8F5E9;
+  --bg: #EEF2F7;
+  --card: #FFFFFF;
+  --text: #1A237E;
+  --text-body: #263238;
+  --text-light: #546E7A;
+  --border: #CFD8DC;
+  --shadow: 0 2px 16px rgba(13,71,161,0.1);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Sarabun',sans-serif;
+  background:var(--bg);
+  color:var(--text-body);
+  min-height:100vh;
+  font-size:15px;
+  line-height:1.5;
+}
+
+/* ── NAV ── */
+.nav{
+  background:linear-gradient(135deg, var(--primary) 0%, var(--primary-mid) 100%);
+  position:sticky;top:0;z-index:200;
+  box-shadow:0 3px 12px rgba(13,71,161,0.35);
+}
+.nav-inner{
+  max-width:900px;margin:0 auto;
+  display:flex;align-items:stretch;
+}
+.nav-brand{
+  padding:13px 16px;
+  display:flex;align-items:center;gap:10px;
+  color:white;flex:1;
+  text-decoration:none;
+}
+.nav-brand-icon{
+  width:36px;height:36px;
+  background:rgba(255,255,255,0.2);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.nav-brand-text{font-size:14px;font-weight:700;line-height:1.25;color:white}
+.nav-brand-sub{font-size:11px;opacity:.75;font-weight:400}
+.nav-tabs{display:flex}
+.nav-tab{
+  padding:16px 18px;
+  color:rgba(255,255,255,0.65);
+  cursor:pointer;font-size:14px;font-weight:600;
+  border-bottom:3px solid transparent;
+  transition:all .2s;white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+.nav-tab.active{color:white;border-bottom-color:white}
+.nav-tab:hover:not(.active){color:rgba(255,255,255,0.9)}
+
+/* ── PAGES ── */
+.page{display:none;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CONTAINER ── */
+.container{max-width:900px;margin:0 auto;padding:16px}
+
+/* ── CARD ── */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px;
+}
+.card-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.card-title{font-weight:700;font-size:16px;color:var(--text)}
+.card-sub{font-size:12px;color:var(--text-light)}
+.card-body{padding:20px}
+
+/* ── STEP DOTS ── */
+.step-wrap{padding:14px 0 6px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.step-dots{display:flex;gap:6px;align-items:center}
+.step-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border);transition:all .3s;
+}
+.step-dot.active{background:var(--primary-mid);width:28px;border-radius:4px}
+.step-dot.done{background:var(--low-mid)}
+.step-label{font-size:12px;color:var(--text-light);font-weight:500}
+
+/* ── FORM ELEMENTS ── */
+.form-group{margin-bottom:18px}
+label.field-label{
+  display:block;font-weight:700;margin-bottom:8px;
+  font-size:14px;color:var(--text);
+}
+.required::after{content:' *';color:var(--high)}
+input[type=date],select{
+  width:100%;padding:14px 16px;
+  border:2px solid var(--border);border-radius:var(--radius-sm);
+  font-family:'Sarabun',sans-serif;font-size:15px;
+  background:white;transition:border-color .2s;
+  appearance:none;-webkit-appearance:none;color:var(--text-body);
+}
+input[type=date]:focus,select:focus{outline:none;border-color:var(--primary-mid)}
+
+/* ── RISK CARDS ── */
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.risk-card{
+  border:2.5px solid var(--border);border-radius:var(--radius);
+  padding:20px 10px 16px;text-align:center;cursor:pointer;
+  transition:all .2s;user-select:none;background:white;
+}
+.risk-card:active{transform:scale(.97)}
+.risk-card.sel-high{border-color:var(--high-mid);background:var(--high-bg)}
+.risk-card.sel-medium{border-color:var(--medium);background:var(--medium-bg)}
+.risk-card.sel-low{border-color:var(--low-mid);background:var(--low-bg)}
+.risk-icon{font-size:34px;margin-bottom:8px;line-height:1}
+.risk-name{font-size:13px;font-weight:700;line-height:1.3}
+.risk-en{font-size:10px;opacity:.7;margin-top:2px}
+.risk-count{
+  margin-top:8px;font-size:11px;font-weight:600;
+  padding:3px 8px;border-radius:20px;display:inline-block;
+}
+.risk-high .risk-name{color:var(--high-mid)}
+.risk-high .risk-count{background:var(--high-bg);color:var(--high-mid)}
+.risk-medium .risk-name{color:var(--medium)}
+.risk-medium .risk-count{background:var(--medium-bg);color:var(--medium)}
+.risk-low .risk-name{color:var(--low-mid)}
+.risk-low .risk-count{background:var(--low-bg);color:var(--low-mid)}
+
+/* ── EQUIPMENT CARD ── */
+.eq-card{
+  border:2px solid var(--border);border-radius:var(--radius);
+  margin-bottom:12px;overflow:hidden;transition:border-color .2s;
+}
+.eq-card.complete{border-color:var(--low-mid)}
+.eq-card.incomplete{border-color:var(--border)}
+.eq-card.has-issue{border-color:var(--medium)}
+.eq-header{
+  padding:14px 16px;display:flex;align-items:center;
+  cursor:pointer;background:#FAFBFD;gap:10px;
+  user-select:none;
+}
+.eq-header:active{background:#F0F4F8}
+.eq-num{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;
+  background:var(--primary-light);color:var(--primary-mid);
+}
+.eq-name{font-weight:600;font-size:14px;flex:1;color:var(--text-body)}
+.eq-status-icon{font-size:22px;flex-shrink:0}
+.eq-chevron{font-size:13px;color:var(--text-light);flex-shrink:0;transition:transform .2s}
+.eq-chevron.open{transform:rotate(180deg)}
+.eq-body{padding:16px;border-top:1px solid var(--border)}
+
+/* ── UNIT SECTION ── */
+.unit-title{
+  padding:8px 14px;border-radius:var(--radius-xs);
+  font-size:13px;font-weight:700;margin-bottom:14px;
+  background:var(--primary-light);color:var(--primary-mid);
+  display:flex;align-items:center;gap:6px;
+}
+.section-label{
+  font-size:12px;font-weight:700;color:var(--text-light);
+  text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:8px;
+}
+
+/* ── STATUS BUTTONS ── */
+.status-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.status-btn{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 14px;border:2.5px solid var(--border);
+  border-radius:var(--radius-sm);cursor:pointer;
+  font-family:'Sarabun',sans-serif;font-size:14px;
+  background:white;width:100%;text-align:left;
+  transition:all .15s;
+}
+.status-btn:active{opacity:.8}
+.status-btn .s-icon{font-size:20px;flex-shrink:0}
+.status-btn .s-text{flex:1;font-weight:500}
+.status-btn.sel-ready{border-color:var(--low-mid);background:var(--low-bg);color:var(--low)}
+.status-btn.sel-partial{border-color:var(--medium);background:var(--medium-bg);color:var(--medium)}
+.status-btn.sel-cancel{border-color:var(--high-mid);background:var(--high-bg);color:var(--high-mid)}
+
+/* ── CHECK ITEMS ── */
+.check-section{
+  padding:12px;background:#F8FFFD;
+  border-radius:var(--radius-sm);border:1.5px solid #B2DFDB;
+  margin-top:4px;
+}
+.check-section-title{
+  font-size:12px;font-weight:700;color:#00695C;
+  margin-bottom:10px;display:flex;align-items:center;gap:4px;
+}
+.check-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid #E0F2F1;cursor:pointer;
+}
+.check-item:last-child{border-bottom:none;padding-bottom:0}
+.check-box{
+  width:26px;height:26px;border:2px solid var(--border);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:15px;background:white;
+  transition:all .15s;color:transparent;
+}
+.check-box.on{background:var(--low-mid);border-color:var(--low-mid);color:white}
+.check-label{font-size:14px;color:var(--text-body);flex:1}
+.check-progress{
+  font-size:11px;font-weight:700;
+  padding:2px 8px;border-radius:20px;
+  background:var(--primary-light);color:var(--primary-mid);
+  margin-left:auto;flex-shrink:0;
+}
+
+/* ── DIVIDER ── */
+.unit-divider{
+  height:1px;background:var(--border);margin:16px -16px;
+}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:15px 22px;border-radius:var(--radius-sm);
+  font-family:'Sarabun',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .2s;border:none;
+}
+.btn:active{transform:scale(.97)}
+.btn-full{width:100%}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary-mid),var(--primary));
+  color:white;box-shadow:0 4px 14px rgba(13,71,161,0.3);
+}
+.btn-primary:hover{box-shadow:0 6px 18px rgba(13,71,161,0.4)}
+.btn-primary:disabled{
+  background:var(--border);color:var(--text-light);
+  box-shadow:none;cursor:not-allowed;
+}
+.btn-outline{
+  background:white;border:2px solid var(--border);
+  color:var(--text-body);
+}
+.btn-success{
+  background:linear-gradient(135deg,#2E7D32,#1B5E20);
+  color:white;box-shadow:0 4px 14px rgba(27,94,32,0.3);
+}
+.btn-success:disabled{background:var(--border);color:var(--text-light);box-shadow:none;cursor:not-allowed}
+.btn-row{display:flex;gap:10px}
+.btn-back{flex:0 0 auto;width:auto;padding:15px 18px}
+
+/* ── SUCCESS ── */
+.success-wrap{padding:40px 20px;text-align:center}
+.success-icon{font-size:72px;margin-bottom:16px;animation:bounceIn .5s ease}
+@keyframes bounceIn{
+  0%{transform:scale(.5);opacity:0}
+  70%{transform:scale(1.1)}
+  100%{transform:scale(1);opacity:1}
+}
+.success-title{font-size:24px;font-weight:800;color:var(--low-mid);margin-bottom:8px}
+.success-sub{color:var(--text-light);margin-bottom:28px}
+.success-detail{
+  background:var(--low-bg);border-radius:var(--radius-sm);
+  padding:14px;margin-bottom:24px;
+  font-size:13px;color:var(--low-mid);font-weight:500;
+}
+
+/* ── ALERT ── */
+.alert{
+  padding:13px 16px;border-radius:var(--radius-sm);
+  margin-bottom:14px;font-size:14px;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.alert-error{background:var(--high-bg);color:var(--high-mid);border-left:4px solid var(--high-mid)}
+.alert-warning{background:var(--medium-bg);color:var(--medium);border-left:4px solid var(--medium)}
+
+/* ── PROGRESS MINI ── */
+.eq-progress{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 0 0;font-size:11px;color:var(--text-light);
+}
+.eq-pbar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.eq-pfill{height:100%;background:var(--low-mid);border-radius:2px;transition:width .3s}
+
+/* ── DASHBOARD ── */
+.dash-section-label{
+  font-size:11px;font-weight:700;color:var(--text-light);
+  text-transform:uppercase;letter-spacing:.8px;
+  padding:12px 4px 6px;
+}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:4px}
+.stat-card{
+  background:white;border-radius:var(--radius);padding:16px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+}
+.stat-card.s-all::before{background:var(--primary-mid)}
+.stat-card.s-ready::before{background:var(--low-mid)}
+.stat-card.s-issue::before{background:var(--medium)}
+.stat-card.s-cancel::before{background:var(--high-mid)}
+.stat-val{font-size:36px;font-weight:800;line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:12px;color:var(--text-light);font-weight:600}
+.stat-icon{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  font-size:32px;opacity:.15;
+}
+
+/* ── FILTER PILLS ── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pill{
+  padding:8px 16px;border-radius:24px;font-size:13px;
+  font-weight:700;cursor:pointer;border:2px solid transparent;
+  transition:all .15s;user-select:none;
+}
+.pill:active{transform:scale(.95)}
+.pill-all{background:var(--primary-light);color:var(--primary-mid)}
+.pill-all.on{background:var(--primary-mid);color:white}
+.pill-high{background:var(--high-bg);color:var(--high-mid)}
+.pill-high.on{background:var(--high-mid);color:white}
+.pill-medium{background:var(--medium-bg);color:var(--medium)}
+.pill-medium.on{background:var(--medium);color:white}
+.pill-low{background:var(--low-bg);color:var(--low-mid)}
+.pill-low.on{background:var(--low-mid);color:white}
+
+/* ── TABLE ── */
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:580px}
+th{
+  background:#F0F4F8;padding:10px 12px;text-align:left;
+  font-weight:700;color:var(--text-light);border-bottom:2px solid var(--border);
+  white-space:nowrap;font-size:12px;
+}
+td{padding:10px 12px;border-bottom:1px solid #F0F4F8;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#F8FAFC}
+
+/* ── BADGE ── */
+.rbadge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;
+  white-space:nowrap;
+}
+.rb-high{background:var(--high-bg);color:var(--high-mid)}
+.rb-medium{background:var(--medium-bg);color:var(--medium)}
+.rb-low{background:var(--low-bg);color:var(--low-mid)}
+.rb-ready{background:var(--low-bg);color:var(--low-mid)}
+.rb-partial{background:var(--medium-bg);color:var(--medium)}
+.rb-cancel{background:var(--high-bg);color:var(--high-mid)}
+
+/* ── SCORE MINI ── */
+.score-mini{display:flex;align-items:center;gap:6px;min-width:80px}
+.score-bar{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px}
+.score-txt{font-size:11px;font-weight:700;white-space:nowrap}
+
+/* ── EMPTY / LOADING ── */
+.center-msg{text-align:center;padding:36px 20px;color:var(--text-light)}
+.center-msg .big{font-size:40px;margin-bottom:10px}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--primary-mid);border-radius:50%;
+  animation:spin .8s linear infinite;margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CHART CARD ── */
+.chart-wrap{padding:16px 8px 8px}
+
+/* ── SUMMARY TABLE on DASHBOARD ── */
+.eq-summary{
+  display:flex;flex-direction:column;gap:0;
+}
+.eq-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;border-bottom:1px solid #F0F4F8;
+}
+.eq-row:last-child{border-bottom:none}
+.eq-row-name{flex:1;font-size:13px;color:var(--text-body);font-weight:500}
+.eq-row-risk{flex-shrink:0}
+.eq-row-bars{display:flex;gap:6px;flex-shrink:0}
+.mini-unit{
+  width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  background:#F5F5F5;
+}
+.mini-unit.ready{background:var(--low-bg)}
+.mini-unit.partial{background:var(--medium-bg)}
+.mini-unit.cancel{background:var(--high-bg)}
+
+/* ── INFO BANNER ── */
+.info-bar{
+  background:linear-gradient(135deg,var(--primary) 0%,#1976D2 100%);
+  padding:12px 20px;display:flex;align-items:center;gap:10px;
+  color:white;font-size:13px;
+}
+.info-bar a{color:#90CAF9}
+
+/* ── RESPONSIVE ── */
+@media(max-width:400px){
+  .nav-brand-text{font-size:13px}
+  .nav-tab{padding:14px 12px;font-size:13px}
+  .stat-val{font-size:30px}
+  .risk-name{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="nav-brand-icon">🏥</div>
+      <div>
+        <div class="nav-brand-text">ตรวจเช็คเครื่องมือแพทย์</div>
+        <div class="nav-brand-sub">ห้องฉุกเฉิน · Emergency Room</div>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" id="tab-form" onclick="showTab('form')">
+        📋 บันทึก
+      </div>
+      <div class="nav-tab" id="tab-dash" onclick="showTab('dash')">
+        📊 Dashboard
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════ FORM PAGE ════════════════════════════ -->
+<div class="page active" id="page-form">
+<div class="container">
+
+<!-- STEP 1: ข้อมูลพื้นฐาน -->
+<div id="s1">
+  <div class="step-wrap">
+    <div class="step-dots">
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">ขั้นตอน 1 จาก 3 — ข้อมูลพื้นฐาน</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div style="font-size:26px">📅</div>
+      <div>
+        <div class="card-title">ข้อมูลการตรวจสอบ</div>
+        <div class="card-sub">กรอกวันที่และเลือกผู้ตรวจสอบ</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="field-label required">วันที่ตรวจเช็ค</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="field-label required">ชื่อผู้ตรวจสอบ</label>
+        <select id="fInspector">
+          <option value="">— กรุณาเลือกชื่อ —</option>
+          <option>น.ส.ธันย์ชนก มูลเจริญ</option>
+          <option>น.ส.กฤตยา ปูคำ</option>
+          <option>น.ส.ศุทธิชา ประทุม</option>
+          <option>น.ส.พรพิมล อุตมติง</option>
+          <option>น.ส.ทิตยา สมธรรม</option>
+          <option>นายอภิสิทธิ์ เกรงสำโรง</option>
+          <option>น.ส.ปานตะวัน เมืองมูล</option>
+          <option>น.ส.คนึงนิจ ชัยยา</option>
+          <option>น.ส.เบญจรัตน์ เรืองฤทธิไกร</option>
+          <option>นางปิยาภรณ์ นาไวย์</option>
+          <option>น.ส.อิสริยาภรณ์ แก้วตุด</option>
+          <option>น.ส.วันวิสาข์ สิทธิดารา</option>
+          <option>ว่าที่ ร.ต.หญิงกมลณัฎฐ์ ขัติพิบูลย์</option>
+          <option>น.ส.จุฑามาศ มะโนแบ้ว</option>
+          <option>น.ส.จตุพร รุ่งตระกูลไทย</option>
+          <option>น.ส.นงคราญ คันธวงศ์</option>
+          <option>น.ส.ศิริวรรณ มินโด</option>
+          <option>น.ส.อำไพ โกคำ</option>
+          <option>น.ส.สุกัญญา ทรัพย์สอาด</option>
+          <option>น.ส.นาฎอนงค์ กล้าหาญ</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <button class="btn btn-primary btn-full" onclick="next1()">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: เลือกระดับความเสี่ยง -->
+<div id="s2" style="display:none">
+  <div class="step-wrap">
+    <div class="step-dots">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">ขั้นตอน 2 จาก 3 — เลือกระดับความเสี่ยง</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div style="font-size:26px">⚠️</div>
+      <div>
+        <div class="card-title">เลือกระดับความเสี่ยง</div>
+        <div class="card-sub">แตะเพื่อเลือกกลุ่มเครื่องมือที่ต้องการตรวจสอบ</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="risk-grid">
+        <div class="risk-card risk-high" onclick="pickRisk('high',this)">
+          <div class="risk-icon">🔴</div>
+          <div class="risk-name">ความเสี่ยงสูง</div>
+          <div class="risk-en">High Risk</div>
+          <div class="risk-count">4 รายการ</div>
+        </div>
+        <div class="risk-card risk-medium" onclick="pickRisk('medium',this)">
+          <div class="risk-icon">🟡</div>
+          <div class="risk-name">ความเสี่ยงปานกลาง</div>
+          <div class="risk-en">Medium Risk</div>
+          <div class="risk-count">9 รายการ</div>
+        </div>
+        <div class="risk-card risk-low" onclick="pickRisk('low',this)">
+          <div class="risk-icon">🟢</div>
+          <div class="risk-name">ความเสี่ยงต่ำ</div>
+          <div class="risk-en">Low Risk</div>
+          <div class="risk-count">6 รายการ</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <div class="btn-row">
+        <button class="btn btn-outline btn-back" onclick="back1()">← ย้อนกลับ</button>
+        <button class="btn btn-primary btn-full" id="btnNext2" disabled onclick="next2()">ถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: กรอกข้อมูลเครื่องมือ -->
+<div id="s3" style="display:none">
+  <div class="step-wrap">
+    <div class="step-dots">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">ขั้นตอน 3 จาก 3 — กรอกข้อมูลเครื่องมือ</div>
+  </div>
+
+  <div id="formBanner" class="info-bar" style="border-radius:var(--radius);margin-bottom:12px;border:1px solid rgba(255,255,255,0.2)">
+    <span style="font-size:20px">📋</span>
+    <span id="bannerText"></span>
+  </div>
+
+  <div id="eqList"></div>
+
+  <div id="submitErr" class="alert alert-error" style="display:none"></div>
+
+  <div class="btn-row" style="padding-bottom:28px">
+    <button class="btn btn-outline btn-back" onclick="back2()">← ย้อนกลับ</button>
+    <button class="btn btn-success btn-full" id="btnSave" onclick="saveForm()">✅ บันทึกข้อมูล</button>
+  </div>
+</div>
+
+<!-- STEP 4: สำเร็จ -->
+<div id="s4" style="display:none">
+  <div class="card">
+    <div class="success-wrap">
+      <div class="success-icon">✅</div>
+      <div class="success-title">บันทึกสำเร็จ!</div>
+      <div class="success-sub">ข้อมูลถูกบันทึกลง Google Sheet เรียบร้อยแล้ว</div>
+      <div class="success-detail" id="successDetail"></div>
+      <button class="btn btn-primary btn-full" onclick="resetAll()" style="margin-bottom:10px">
+        📋 บันทึกรายการใหม่
+      </button>
+      <button class="btn btn-outline btn-full" onclick="showTab('dash')">
+        📊 ดู Dashboard
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+</div><!-- /page-form -->
+
+
+<!-- ════════════════════════════ DASHBOARD PAGE ════════════════════════════ -->
+<div class="page" id="page-dash">
+<div class="container">
+
+  <div class="dash-section-label">📊 สรุปการตรวจสอบ (30 วันล่าสุด)</div>
+
+  <div class="stat-grid">
+    <div class="stat-card s-all">
+      <div class="stat-val" id="dTotal" style="color:var(--primary-mid)">—</div>
+      <div class="stat-lbl">รายการทั้งหมด</div>
+      <div class="stat-icon">📋</div>
+    </div>
+    <div class="stat-card s-ready">
+      <div class="stat-val" id="dReady" style="color:var(--low-mid)">—</div>
+      <div class="stat-lbl">พร้อมใช้งาน</div>
+      <div class="stat-icon">✅</div>
+    </div>
+    <div class="stat-card s-issue">
+      <div class="stat-val" id="dIssue" style="color:var(--medium)">—</div>
+      <div class="stat-lbl">มีปัญหา (ยังใช้)</div>
+      <div class="stat-icon">⚠️</div>
+    </div>
+    <div class="stat-card s-cancel">
+      <div class="stat-val" id="dCancel" style="color:var(--high-mid)">—</div>
+      <div class="stat-lbl">ยกเลิกใช้งาน</div>
+      <div class="stat-icon">❌</div>
+    </div>
+  </div>
+
+  <div class="dash-section-label">🔍 กรองตามระดับความเสี่ยง</div>
+  <div class="filter-row">
+    <div class="pill pill-all on" onclick="setFilter('all',this)">ทั้งหมด</div>
+    <div class="pill pill-high" onclick="setFilter('high',this)">🔴 ความเสี่ยงสูง</div>
+    <div class="pill pill-medium" onclick="setFilter('medium',this)">🟡 ปานกลาง</div>
+    <div class="pill pill-low" onclick="setFilter('low',this)">🟢 ความเสี่ยงต่ำ</div>
+  </div>
+
+  <!-- Latest Records Table -->
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">📋</span>
+        <div>
+          <div class="card-title">รายการตรวจสอบล่าสุด</div>
+          <div class="card-sub" id="dashSubtitle">50 รายการล่าสุด</div>
+        </div>
+      </div>
+      <button onclick="loadDash()" style="
+        padding:7px 13px;background:var(--primary-light);
+        color:var(--primary-mid);border:none;border-radius:var(--radius-xs);
+        font-family:Sarabun;font-size:13px;font-weight:700;cursor:pointer;
+        flex-shrink:0;
+      ">🔄 รีเฟรช</button>
+    </div>
+    <div id="dashLoading" class="center-msg">
+      <div class="spinner"></div>
+      กำลังโหลดข้อมูล...
+    </div>
+    <div id="dashTable" style="display:none">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>ผู้ตรวจสอบ</th>
+              <th>ระดับ</th>
+              <th>เครื่องมือ</th>
+              <th>หน่วย</th>
+              <th>สถานะ</th>
+              <th>คะแนน</th>
+            </tr>
+          </thead>
+          <tbody id="dashTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="dashEmpty" class="center-msg" style="display:none">
+      <div class="big">🗂️</div>
+      <div>ไม่พบข้อมูลในช่วงเวลานี้</div>
+    </div>
+  </div>
+
+  <!-- Equipment Summary -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:22px">🩺</span>
+      <div>
+        <div class="card-title">สรุปสถานะเครื่องมือ (บันทึกล่าสุด)</div>
+        <div class="card-sub">แสดงสถานะล่าสุดของแต่ละเครื่อง</div>
+      </div>
+    </div>
+    <div id="eqSummary" class="eq-summary">
+      <div class="center-msg" style="padding:20px">กำลังโหลด...</div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:22px">📈</span>
+      <div class="card-title">สัดส่วนสถานะเครื่องมือทั้งหมด</div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="statusChart" style="max-height:260px"></canvas>
+    </div>
+  </div>
+
+  <div style="padding-bottom:24px;text-align:center;font-size:11px;color:var(--text-light)">
+    ระบบตรวจเช็คเครื่องมือแพทย์ ห้องฉุกเฉิน · พัฒนาสำหรับงานหน้า ER
+  </div>
+
+</div><!-- /container -->
+</div><!-- /page-dash -->
+
+
+<script>
+// ╔══════════════════════════════════════════════════════════╗
+// ║  CONFIG — เปลี่ยน URL ตรงนี้หลังจาก Deploy Apps Script  ║
+// ╚══════════════════════════════════════════════════════════╝
+const SCRIPT_URL = 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_SCRIPT_ID/exec';
+
+// ════════════════ EQUIPMENT DATA ════════════════
+const EQ = {
+  high: [
+    { id:'ventilator', name:'เครื่องช่วยหายใจ (Ventilator)',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีประวัติการฆ่าเชื้อ','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'defib', name:'เครื่องกระตุกหัวใจ (Defibrillator)',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีประวัติการฆ่าเชื้อ','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'autocpr', name:'Auto CPR',
+      checks:['สถานที่ตั้งสะอาด','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','การทำความสะอาดเครื่อง','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'aed', name:'AED',
+      checks:['สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] }
+  ],
+  medium: [
+    { id:'infuse1', name:'เครื่องให้สารละลายทางหลอดเลือดดำ 1',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'infuse2', name:'เครื่องให้สารละลายทางหลอดเลือดดำ 2',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'suction_pipe', name:'เครื่อง Suction ต่อ Pipe Line',
+      checks:['สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','อุปกรณ์ประกอบครบ','มีการทำความสะอาด'] },
+    { id:'suction_mobile', name:'เครื่อง Suction แบบ Mobile',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','มีประวัติการฆ่าเชื้อ','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'nibp', name:'Monitor NIBP (ติดผนัง)',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'ekg12', name:'EKG 12 Lead',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'ultrasound', name:'Ultrasound',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','การแสดงผลชัดเจน','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'oximeter', name:'เครื่องวัดออกซิเจนปลายนิ้ว',
+      checks:['สายไฟอยู่ในสภาพดี','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด'] },
+    { id:'cautery', name:'เครื่องจี้ไฟฟ้า',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] }
+  ],
+  low: [
+    { id:'bp_manual', name:'เครื่องวัดความดันโลหิตแบบ Manual',
+      checks:['สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','อุปกรณ์ประกอบครบ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น'] },
+    { id:'bp_wheel', name:'เครื่องวัดความดันโลหิตแบบล้อลาก',
+      checks:['สายไฟอยู่ในสภาพดี','ปลั๊กไฟยึดแน่น','สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่สำรองพร้อมใช้','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'otoscope', name:'ที่ส่องหู (Otoscope)',
+      checks:['มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','มีการทำความสะอาด','ถ่านไฟฉาย','ผู้ใช้งานใช้เครื่องมือเป็น','มีคู่มือฉบับย่อประจำเครื่อง'] },
+    { id:'scale', name:'เครื่องชั่งน้ำหนัก',
+      checks:['สถานที่ตั้งสะอาด','มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','ตัวเลขแสดงผลชัดเจน','มีการทำความสะอาด'] },
+    { id:'thermo', name:'ปรอทวัดไข้',
+      checks:['มีสติ๊กเกอร์ PM/calibration ไม่หมดอายุ','แบตเตอรี่','อุปกรณ์ประกอบครบ','ตัวเลขแสดงผลชัดเจน','ระบบ Alarm ทำงานปกติ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น'] },
+    { id:'stethoscope', name:'Stethoscope (หูฟัง)',
+      checks:['สถานที่ตั้งสะอาด','อุปกรณ์ประกอบครบ','มีการทำความสะอาด','ผู้ใช้งานใช้เครื่องมือเป็น'] }
+  ]
+};
+
+const RISK_LABEL = { high:'ความเสี่ยงสูง', medium:'ความเสี่ยงปานกลาง', low:'ความเสี่ยงต่ำ' };
+const RISK_ICON  = { high:'🔴', medium:'🟡', low:'🟢' };
+const ST_OPTIONS = [
+  { v:'ready',   icon:'✅', txt:'พร้อมใช้/มี' },
+  { v:'partial', icon:'⚠️', txt:'ไม่พร้อมใช้/ไม่มี แต่ยังใช้งานอยู่' },
+  { v:'cancel',  icon:'❌', txt:'ไม่พร้อมใช้/ไม่มี ยกเลิกการใช้งาน' }
+];
+
+// ════════════════ STATE ════════════════
+let risk = null;
+let fData = {};       // form data
+let allRec = [];      // dashboard records
+let dashFilter = 'all';
+let chartObj = null;
+
+// ════════════════ TAB ════════════════
+function showTab(t) {
+  ['form','dash'].forEach(n => {
+    document.getElementById('page-'+n).classList.remove('active');
+    document.getElementById('tab-'+(n==='form'?'form':'dash')).classList.remove('active');
+  });
+  document.getElementById('page-'+t).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  if (t === 'dash') loadDash();
+}
+
+// ════════════════ STEP 1 ════════════════
+function next1() {
+  const d = document.getElementById('fDate').value;
+  const i = document.getElementById('fInspector').value;
+  if (!d) { alert('กรุณาเลือกวันที่'); return; }
+  if (!i) { alert('กรุณาเลือกชื่อผู้ตรวจสอบ'); return; }
+  fData.date = d;
+  fData.inspector = i;
+  show('s1',false); show('s2',true);
+}
+
+// ════════════════ STEP 2 ════════════════
+function pickRisk(r, el) {
+  risk = r;
+  document.querySelectorAll('.risk-card').forEach(c =>
+    c.classList.remove('sel-high','sel-medium','sel-low'));
+  el.classList.add('sel-' + r);
+  document.getElementById('btnNext2').disabled = false;
+}
+function back1() { show('s2',false); show('s1',true); }
+function next2() {
+  if (!risk) return;
+  fData.risk = risk;
+  show('s2',false); show('s3',true);
+  buildForm();
+}
+
+// ════════════════ STEP 3 ════════════════
+function back2() { show('s3',false); show('s2',true); }
+
+function buildForm() {
+  const eqList = EQ[risk];
+  const rLabel = `${RISK_ICON[risk]} ${RISK_LABEL[risk]}`;
+  document.getElementById('bannerText').innerHTML =
+    `📅 <strong>${fData.date}</strong> &nbsp;·&nbsp; 👤 <strong>${fData.inspector}</strong> &nbsp;·&nbsp; ${rLabel}`;
+
+  fData.items = {};
+  let html = '';
+  eqList.forEach((eq, idx) => {
+    fData.items[eq.id] = {
+      name: eq.name,
+      u1: { status:'', checks:{} },
+      u2: { status:'', checks:{} }
+    };
+    eq.checks.forEach(c => {
+      fData.items[eq.id].u1.checks[c] = false;
+      fData.items[eq.id].u2.checks[c] = false;
+    });
+
+    html += `
+    <div class="eq-card" id="ec-${eq.id}">
+      <div class="eq-header" onclick="toggleEq('${eq.id}')">
+        <div class="eq-num">${idx+1}</div>
+        <div class="eq-name">${eq.name}</div>
+        <div class="eq-status-icon" id="ei-${eq.id}">⚪</div>
+        <div class="eq-chevron" id="ch-${eq.id}">▼</div>
+      </div>
+      <div class="eq-body" id="eb-${eq.id}" style="display:none">
+        ${buildUnit(eq, 1)}
+        <div class="unit-divider"></div>
+        ${buildUnit(eq, 2)}
+      </div>
+    </div>`;
+  });
+  document.getElementById('eqList').innerHTML = html;
+  // auto-open first
+  toggleEq(eqList[0].id);
+}
+
+function buildUnit(eq, u) {
+  const uid = `${eq.id}_u${u}`;
+  const stHtml = ST_OPTIONS.map(s => `
+    <button class="status-btn" id="sb-${uid}-${s.v}"
+      onclick="setStatus('${eq.id}',${u},'${s.v}')">
+      <span class="s-icon">${s.icon}</span>
+      <span class="s-text">${s.txt}</span>
+    </button>`).join('');
+
+  const ckHtml = eq.checks.map((c,i) => {
+    const cid = `${eq.id}_${u}_${i}`;
+    return `<div class="check-item" onclick="toggleCheck('${eq.id}',${u},${i},'${cid}')">
+      <div class="check-box" id="cb-${cid}">✓</div>
+      <span class="check-label">${c}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="unit-section" id="us-${uid}">
+      <div class="unit-title">🔹 เครื่องที่ ${u}</div>
+      <div class="section-label">สถานะเครื่องมือ <span style="color:var(--high-mid)">*</span></div>
+      <div class="status-group">${stHtml}</div>
+      <div id="ck-${uid}" style="display:none">
+        <div class="section-label">รายการตรวจสอบ</div>
+        <div class="check-section">
+          <div class="check-section-title">
+            ✔️ ติ๊กรายการที่ผ่านการตรวจสอบ
+            <span class="check-progress" id="cp-${uid}">0/${eq.checks.length}</span>
+          </div>
+          ${ckHtml}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleEq(id) {
+  const b = document.getElementById('eb-'+id);
+  const c = document.getElementById('ch-'+id);
+  const open = b.style.display !== 'none';
+  b.style.display = open ? 'none' : 'block';
+  c.classList.toggle('open', !open);
+}
+
+function setStatus(eqId, u, val) {
+  const unitKey = u === 1 ? 'u1' : 'u2';
+  fData.items[eqId][unitKey].status = val;
+  const uid = `${eqId}_u${u}`;
+  ST_OPTIONS.forEach(s => {
+    const btn = document.getElementById(`sb-${uid}-${s.v}`);
+    if (btn) {
+      btn.classList.remove('sel-ready','sel-partial','sel-cancel');
+      if (s.v === val) btn.classList.add('sel-'+val);
+    }
+  });
+  // show checks only if ready
+  const ckDiv = document.getElementById('ck-'+uid);
+  if (ckDiv) ckDiv.style.display = val === 'ready' ? 'block' : 'none';
+  updateEqIcon(eqId);
+}
+
+function toggleCheck(eqId, u, idx, cid) {
+  const unitKey = u === 1 ? 'u1' : 'u2';
+  const eq = EQ[risk].find(e => e.id === eqId);
+  const key = eq.checks[idx];
+  const cur = fData.items[eqId][unitKey].checks[key];
+  fData.items[eqId][unitKey].checks[key] = !cur;
+  const box = document.getElementById('cb-'+cid);
+  box.classList.toggle('on', !cur);
+  // update progress
+  const uid = `${eqId}_u${u}`;
+  const checks = fData.items[eqId][unitKey].checks;
+  const passed = Object.values(checks).filter(Boolean).length;
+  const total  = Object.keys(checks).length;
+  const cpEl = document.getElementById('cp-'+uid);
+  if (cpEl) cpEl.textContent = `${passed}/${total}`;
+}
+
+function updateEqIcon(eqId) {
+  const item = fData.items[eqId];
+  const el = document.getElementById('ei-'+eqId);
+  const card = document.getElementById('ec-'+eqId);
+  if (!el) return;
+  const s1 = item.u1.status, s2 = item.u2.status;
+  let icon = '⚪', cls = 'incomplete';
+  if (s1 && s2) {
+    if (s1 === 'cancel' || s2 === 'cancel') { icon = '❌'; cls = 'has-issue'; }
+    else if (s1 === 'partial' || s2 === 'partial') { icon = '⚠️'; cls = 'has-issue'; }
+    else { icon = '✅'; cls = 'complete'; }
+  }
+  el.textContent = icon;
+  card.className = `eq-card ${cls}`;
+}
+
+async function saveForm() {
+  // validate
+  const eqList = EQ[risk];
+  const errs = [];
+  eqList.forEach(eq => {
+    if (!fData.items[eq.id].u1.status) errs.push(`${eq.name} — เครื่องที่ 1`);
+    if (!fData.items[eq.id].u2.status) errs.push(`${eq.name} — เครื่องที่ 2`);
+  });
+  if (errs.length) {
+    const errEl = document.getElementById('submitErr');
+    errEl.style.display = 'flex';
+    errEl.innerHTML = `<span>⚠️</span><div><strong>กรุณากรอกสถานะให้ครบทุกช่อง:</strong><br>`
+      + errs.slice(0,4).map(e=>`• ${e}`).join('<br>')
+      + (errs.length>4?`<br>... และอีก ${errs.length-4} รายการ`:'') + '</div>';
+    errEl.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  document.getElementById('submitErr').style.display = 'none';
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ กำลังบันทึก...';
+
+  // build rows
+  const rows = [];
+  const ts = new Date().toISOString();
+  eqList.forEach(eq => {
+    [1,2].forEach(u => {
+      const unitKey = u === 1 ? 'u1' : 'u2';
+      const unit = fData.items[eq.id][unitKey];
+      const passed = Object.entries(unit.checks).filter(([,v])=>v).map(([k])=>k);
+      const failed = Object.entries(unit.checks).filter(([,v])=>!v).map(([k])=>k);
+      const total  = Object.keys(unit.checks).length;
+      rows.push({
+        timestamp:    ts,
+        date:         fData.date,
+        inspector:    fData.inspector,
+        riskLevel:    risk,
+        equipmentName: eq.name,
+        unitNo:       u,
+        status:       unit.status,
+        checksPassed: passed.join('; '),
+        checksFailed: failed.join('; '),
+        score:        total > 0 ? `${passed.length}/${total}` : 'N/A'
+      });
+    });
+  });
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rows })
+    });
+    // no-cors → assume success
+    showSuccess(rows);
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '✅ บันทึกข้อมูล';
+    alert('เกิดข้อผิดพลาด: ' + e.message);
+  }
+}
+
+function showSuccess(rows) {
+  const readyCount  = rows.filter(r=>r.status==='ready').length;
+  const issueCount  = rows.filter(r=>r.status!=='ready').length;
+  document.getElementById('successDetail').innerHTML =
+    `บันทึก <strong>${rows.length} รายการ</strong> |
+     ✅ พร้อมใช้ ${readyCount} รายการ |
+     ⚠️ ต้องติดตาม ${issueCount} รายการ`;
+  show('s3',false); show('s4',true);
+  window.scrollTo(0,0);
+}
+
+function resetAll() {
+  risk = null; fData = {};
+  document.getElementById('fDate').value = '';
+  document.getElementById('fInspector').value = '';
+  document.getElementById('btnNext2').disabled = true;
+  document.querySelectorAll('.risk-card').forEach(c=>c.classList.remove('sel-high','sel-medium','sel-low'));
+  document.getElementById('eqList').innerHTML = '';
+  ['s2','s3','s4'].forEach(id=>show(id,false));
+  show('s1',true);
+  window.scrollTo(0,0);
+}
+
+// ════════════════ DASHBOARD ════════════════
+async function loadDash() {
+  document.getElementById('dashLoading').style.display = 'block';
+  document.getElementById('dashTable').style.display = 'none';
+  document.getElementById('dashEmpty').style.display = 'none';
+
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=getData&days=30`);
+    const d = await r.json();
+    allRec = d.rows || [];
+  } catch(e) {
+    // show demo data when not configured
+    allRec = makeDemoData();
+  }
+  renderDash();
+}
+
+function setFilter(f, el) {
+  dashFilter = f;
+  document.querySelectorAll('.filter-row .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderDash();
+}
+
+function renderDash() {
+  const recs = dashFilter === 'all' ? allRec : allRec.filter(r=>r.riskLevel===dashFilter);
+
+  // stats
+  const tot = recs.length;
+  const rdy = recs.filter(r=>r.status==='ready').length;
+  const iss = recs.filter(r=>r.status==='partial').length;
+  const cnc = recs.filter(r=>r.status==='cancel').length;
+  document.getElementById('dTotal').textContent  = tot;
+  document.getElementById('dReady').textContent  = rdy;
+  document.getElementById('dIssue').textContent  = iss;
+  document.getElementById('dCancel').textContent = cnc;
+
+  document.getElementById('dashLoading').style.display = 'none';
+
+  if (!recs.length) {
+    document.getElementById('dashEmpty').style.display = 'block';
+    return;
+  }
+  document.getElementById('dashTable').style.display = 'block';
+
+  const rlbl = {
+    high:`<span class="rbadge rb-high">🔴 สูง</span>`,
+    medium:`<span class="rbadge rb-medium">🟡 กลาง</span>`,
+    low:`<span class="rbadge rb-low">🟢 ต่ำ</span>`
+  };
+  const slbl = {
+    ready:`<span class="rbadge rb-ready">✅ พร้อม</span>`,
+    partial:`<span class="rbadge rb-partial">⚠️ มีปัญหา</span>`,
+    cancel:`<span class="rbadge rb-cancel">❌ ยกเลิก</span>`
+  };
+
+  const sorted = [...recs].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,50);
+  document.getElementById('dashTbody').innerHTML = sorted.map(r => {
+    const [p,t] = (r.score||'0/0').split('/').map(Number);
+    const pct = t>0 ? Math.round(p/t*100) : 0;
+    const scoreColor = pct>=80?'#2E7D32':pct>=50?'#E65100':'#C62828';
+    return `<tr>
+      <td style="white-space:nowrap">${r.date}</td>
+      <td style="font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.inspector}</td>
+      <td>${rlbl[r.riskLevel]||r.riskLevel}</td>
+      <td style="font-size:12px;max-width:130px">${r.equipmentName}</td>
+      <td style="text-align:center;font-weight:700">${r.unitNo}</td>
+      <td>${slbl[r.status]||r.status}</td>
+      <td>
+        <div class="score-mini">
+          <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${scoreColor}"></div></div>
+          <div class="score-txt" style="color:${scoreColor}">${r.score||'-'}</div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('dashSubtitle').textContent = `แสดง ${Math.min(50,recs.length)} รายการล่าสุด`;
+
+  // Equipment summary — latest status per equipment
+  renderEqSummary(recs);
+  renderChart(recs);
+}
+
+function renderEqSummary(recs) {
+  // Find latest record per (equipment, unit)
+  const latest = {};
+  [...recs].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(r => {
+    const key = `${r.equipmentName}_${r.unitNo}`;
+    if (!latest[key]) latest[key] = r;
+  });
+
+  const allEq = [...EQ.high, ...EQ.medium, ...EQ.low];
+  let html = '';
+  allEq.forEach(eq => {
+    const r1 = latest[`${eq.name}_1`];
+    const r2 = latest[`${eq.name}_2`];
+    const riskOf = Object.keys(EQ).find(k => EQ[k].find(e=>e.id===eq.id));
+    const rBadge = { high:'<span class="rbadge rb-high" style="font-size:10px">สูง</span>',
+      medium:'<span class="rbadge rb-medium" style="font-size:10px">กลาง</span>',
+      low:'<span class="rbadge rb-low" style="font-size:10px">ต่ำ</span>' };
+    const unitHtml = [r1,r2].map((r,i) => {
+      if (!r) return `<div class="mini-unit" title="เครื่องที่${i+1}: ยังไม่มีข้อมูล">❓</div>`;
+      const icons = {ready:'✅',partial:'⚠️',cancel:'❌'};
+      return `<div class="mini-unit ${r.status}" title="เครื่องที่${i+1}: ${r.status}">${icons[r.status]||'?'}</div>`;
+    }).join('');
+    html += `<div class="eq-row">
+      <div class="eq-row-name">${eq.name}</div>
+      <div class="eq-row-risk">${rBadge[riskOf]||''}</div>
+      <div class="eq-row-bars">${unitHtml}</div>
+    </div>`;
+  });
+  document.getElementById('eqSummary').innerHTML = html;
+}
+
+function renderChart(recs) {
+  const ctx = document.getElementById('statusChart').getContext('2d');
+  if (chartObj) chartObj.destroy();
+  const ready = recs.filter(r=>r.status==='ready').length;
+  const partial = recs.filter(r=>r.status==='partial').length;
+  const cancel  = recs.filter(r=>r.status==='cancel').length;
+  chartObj = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['พร้อมใช้งาน','มีปัญหา (ยังใช้อยู่)','ยกเลิกการใช้งาน'],
+      datasets:[{
+        data:[ready,partial,cancel],
+        backgroundColor:['#2E7D32','#E65100','#C62828'],
+        borderWidth:3, borderColor:'#FFF',
+        hoverOffset:6
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{ font:{family:'Sarabun',size:13}, padding:16, usePointStyle:true }
+        }
+      },
+      cutout:'60%'
+    }
+  });
+}
+
+function makeDemoData() {
+  const insp = ['น.ส.ธันย์ชนก มูลเจริญ','น.ส.กฤตยา ปูคำ','นายอภิสิทธิ์ เกรงสำโรง','น.ส.ศุทธิชา ประทุม'];
+  const statuses = ['ready','ready','ready','ready','partial','partial','cancel'];
+  const all = [...EQ.high,...EQ.medium,...EQ.low];
+  const rows = [];
+  for (let i=0;i<60;i++) {
+    const d=new Date(); d.setDate(d.getDate()-Math.floor(Math.random()*25));
+    const riskKeys = ['high','medium','low'];
+    const riskKey = riskKeys[Math.floor(Math.random()*3)];
+    const eqArr = EQ[riskKey];
+    const eq = eqArr[Math.floor(Math.random()*eqArr.length)];
+    const st = statuses[Math.floor(Math.random()*statuses.length)];
+    const total = eq.checks.length;
+    const passed = st==='ready' ? Math.floor(total*.7+Math.random()*total*.3) : 0;
+    rows.push({
+      timestamp:d.toISOString(),
+      date:d.toISOString().slice(0,10),
+      inspector:insp[Math.floor(Math.random()*insp.length)],
+      riskLevel:riskKey,
+      equipmentName:eq.name,
+      unitNo: Math.random()>.5?1:2,
+      status:st,
+      score:`${passed}/${total}`
+    });
+  }
+  return rows;
+}
+
+// ════════════════ HELPERS ════════════════
+function show(id, visible) {
+  document.getElementById(id).style.display = visible ? 'block' : 'none';
+}
+
+// Set today's date
+document.getElementById('fDate').valueAsDate = new Date();
+</script>
+</body>
+</html>
